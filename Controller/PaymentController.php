@@ -3,10 +3,9 @@
 namespace Pilot\OgonePaymentBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Response;
 use Pilot\OgonePaymentBundle\Entity\OgoneClient;
 use Pilot\OgonePaymentBundle\Entity\OgoneAlias;
-use Pilot\OgonePaymentBundle\Entity\OgoneOrder;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class PaymentController extends Controller
 {
@@ -31,11 +30,11 @@ class PaymentController extends Controller
             ->end()
             ->configure()
                 ->setBgColor('#ffffff')
-                ->setAcceptUrl($this->generateUrl('ogone_payment_feedback', array(), true))
-                ->setDeclineUrl($this->generateUrl('ogone_payment_feedback', array(), true))
-                ->setExceptionUrl($this->generateUrl('ogone_payment_feedback', array(), true))
-                ->setCancelUrl($this->generateUrl('ogone_payment_feedback', array(), true))
-                ->setBackUrl($this->generateUrl('ogone_payment_feedback', array(), true))
+                ->setAcceptUrl($this->generateUrl('ogone_payment_feedback', array(), UrlGeneratorInterface::ABSOLUTE_URL))
+                ->setDeclineUrl($this->generateUrl('ogone_payment_feedback', array(), UrlGeneratorInterface::ABSOLUTE_URL))
+                ->setExceptionUrl($this->generateUrl('ogone_payment_feedback', array(), UrlGeneratorInterface::ABSOLUTE_URL))
+                ->setCancelUrl($this->generateUrl('ogone_payment_feedback', array(), UrlGeneratorInterface::ABSOLUTE_URL))
+                ->setBackUrl($this->generateUrl('ogone_payment_feedback', array(), UrlGeneratorInterface::ABSOLUTE_URL))
             ->end()
         ;
 

@@ -2,6 +2,8 @@
 
 namespace Pilot\OgonePaymentBundle\Builder;
 
+use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use \Symfony\Component\Form\FormFactoryInterface;
 use Pilot\OgonePaymentBundle\Config\ConfigurationContainer;
 
@@ -18,7 +20,7 @@ class TransactionFormBuilder
     public function __construct(FormFactoryInterface $formFactory, ConfigurationContainer $secureConfigurationContainer)
     {
         $this->formFactory = $formFactory;
-        $this->form = $this->formFactory->createNamedBuilder(null, 'form');
+        $this->form = $this->formFactory->createNamedBuilder(null, FormType::class);
 
         $this->secureConfigurationContainer = $secureConfigurationContainer;
     }
@@ -41,10 +43,10 @@ class TransactionFormBuilder
                 $value = $value->format('Y-m-d');
             }
 
-            $this->form->add($configurationContainer->findProperty($key), 'hidden', array('data' => $this->stripAccents($value)));
+            $this->form->add($configurationContainer->findProperty($key), HiddenType::class, array('data' => $this->stripAccents($value)));
         }
 
-        $this->form->add('SHASign', 'hidden', array('data' => $this->getSHASign($configurationContainer)));
+        $this->form->add('SHASign', HiddenType::class, array('data' => $this->getSHASign($configurationContainer)));
 
         return $this;
     }

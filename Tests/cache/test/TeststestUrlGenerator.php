@@ -2,19 +2,17 @@
 
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
-use Symfony\Component\HttpKernel\Log\LoggerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
- * TeststestUrlGenerator
+ * TestsTestUrlGenerator
  *
  * This class has been auto-generated
  * by the Symfony Routing Component.
  */
-class TeststestUrlGenerator extends Symfony\Component\Routing\Generator\UrlGenerator
+class TestsTestUrlGenerator extends Symfony\Component\Routing\Generator\UrlGenerator
 {
-    static private $declaredRoutes = array(
-        'ogone_template' => array (  0 =>   array (    0 => 'twigPath',  ),  1 =>   array (    '_controller' => 'Cedriclombardot\\OgonePaymentBundle\\Controller\\PaymentController::renderTemplateAction',  ),  2 =>   array (  ),  3 =>   array (    0 =>     array (      0 => 'variable',      1 => '/',      2 => '[^/]+',      3 => 'twigPath',    ),    1 =>     array (      0 => 'text',      1 => '/ogone/template',    ),  ),),
-    );
+    private static $declaredRoutes;
 
     /**
      * Constructor.
@@ -23,16 +21,21 @@ class TeststestUrlGenerator extends Symfony\Component\Routing\Generator\UrlGener
     {
         $this->context = $context;
         $this->logger = $logger;
+        if (null === self::$declaredRoutes) {
+            self::$declaredRoutes = array(
+        'ogone_template' => array (  0 =>   array (    0 => 'twigPath',  ),  1 =>   array (    '_controller' => 'Pilot\\OgonePaymentBundle\\Controller\\PaymentController::renderTemplateAction',  ),  2 =>   array (  ),  3 =>   array (    0 =>     array (      0 => 'variable',      1 => '/',      2 => '[^/]++',      3 => 'twigPath',    ),    1 =>     array (      0 => 'text',      1 => '/ogone/template',    ),  ),  4 =>   array (  ),  5 =>   array (  ),),
+    );
+        }
     }
 
-    public function generate($name, $parameters = array(), $absolute = false)
+    public function generate($name, $parameters = array(), $referenceType = self::ABSOLUTE_PATH)
     {
         if (!isset(self::$declaredRoutes[$name])) {
-            throw new RouteNotFoundException(sprintf('Route "%s" does not exist.', $name));
+            throw new RouteNotFoundException(sprintf('Unable to generate a URL for the named route "%s" as such route does not exist.', $name));
         }
 
-        list($variables, $defaults, $requirements, $tokens) = self::$declaredRoutes[$name];
+        list($variables, $defaults, $requirements, $tokens, $hostTokens, $requiredSchemes) = self::$declaredRoutes[$name];
 
-        return $this->doGenerate($variables, $defaults, $requirements, $tokens, $parameters, $name, $absolute);
+        return $this->doGenerate($variables, $defaults, $requirements, $tokens, $parameters, $name, $referenceType, $hostTokens, $requiredSchemes);
     }
 }

@@ -1,6 +1,8 @@
 vendor/
 Tests/build/
-Test/cache/*
+Tests/cache/
+Tests/coverage/
 Tests/schema.xml
 composer.phar
 composer.lock
+.idea/

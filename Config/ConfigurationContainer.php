@@ -3,6 +3,7 @@
 namespace Pilot\OgonePaymentBundle\Config;
 
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ConfigurationContainer extends ParameterBag
 {
@@ -62,7 +63,7 @@ class ConfigurationContainer extends ParameterBag
     public function setTemplate($twigPath, array $context = array(), $urlPrefix = null)
     {
         if (!$urlPrefix) {
-            $url = $this->router->generate($this->templateRoute, array('twigPath' => $twigPath, 'context' => base64_encode(json_encode($context))), true);
+            $url = $this->router->generate($this->templateRoute, array('twigPath' => $twigPath, 'context' => base64_encode(json_encode($context))), UrlGeneratorInterface::ABSOLUTE_URL);
         } else {
             $url = $urlPrefix.$this->router->generate($this->templateRoute, array('twigPath' => $twigPath, 'context' => base64_encode(json_encode($context))));
         }

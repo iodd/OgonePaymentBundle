@@ -4,12 +4,10 @@ namespace Pilot\OgonePaymentBundle\Tests\Builder;
 
 use Symfony\Component\Form\FormFactory;
 use Pilot\OgonePaymentBundle\Tests\TestCase;
-use Pilot\OgonePaymentBundle\Builder\TransactionBuilder;
 use Pilot\OgonePaymentBundle\Builder\TransactionFormBuilder;
 use Pilot\OgonePaymentBundle\Config\SecureConfigurationContainer;
 use Pilot\OgonePaymentBundle\Config\ConfigurationContainer;
 use Pilot\OgonePaymentBundle\Entity\OgoneAlias;
-use Pilot\OgonePaymentBundle\Entity\OgoneOrder;
 use Pilot\OgonePaymentBundle\Batch\TransactionManager;
 
 class TransactionBuilderTest extends TestCase
