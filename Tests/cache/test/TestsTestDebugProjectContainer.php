@@ -2,7 +2,6 @@
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\DependencyInjection\Exception\InactiveScopeException;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
@@ -30,19 +29,19 @@ class TestsTestDebugProjectContainer extends Container
         }
         $this->parameters = $this->getDefaultParameters();
 
-        $this->services =
-        $this->scopedServices =
-        $this->scopeStacks = array();
-        $this->scopes = array('request' => 'container');
-        $this->scopeChildren = array('request' => array());
+        $this->services = array();
         $this->methodMap = array(
             'annotation_reader' => 'getAnnotationReaderService',
             'assets.context' => 'getAssets_ContextService',
             'assets.packages' => 'getAssets_PackagesService',
+            'cache.app' => 'getCache_AppService',
+            'cache.default_redis_provider' => 'getCache_DefaultRedisProviderService',
+            'cache.system' => 'getCache_SystemService',
             'cache_clearer' => 'getCacheClearerService',
             'cache_warmer' => 'getCacheWarmerService',
             'config_cache_factory' => 'getConfigCacheFactoryService',
             'controller_name_converter' => 'getControllerNameConverterService',
+            'debug.argument_resolver' => 'getDebug_ArgumentResolverService',
             'debug.controller_resolver' => 'getDebug_ControllerResolverService',
             'debug.debug_handlers_listener' => 'getDebug_DebugHandlersListenerService',
             'debug.event_dispatcher' => 'getDebug_EventDispatcherService',
@@ -53,6 +52,7 @@ class TestsTestDebugProjectContainer extends Container
             'doctrine.orm.default_entity_listener_resolver' => 'getDoctrine_Orm_DefaultEntityListenerResolverService',
             'doctrine.orm.default_entity_manager' => 'getDoctrine_Orm_DefaultEntityManagerService',
             'doctrine.orm.default_entity_manager.property_info_extractor' => 'getDoctrine_Orm_DefaultEntityManager_PropertyInfoExtractorService',
+            'doctrine.orm.default_listeners.attach_entity_listeners' => 'getDoctrine_Orm_DefaultListeners_AttachEntityListenersService',
             'doctrine.orm.default_manager_configurator' => 'getDoctrine_Orm_DefaultManagerConfiguratorService',
             'doctrine.orm.validator.unique' => 'getDoctrine_Orm_Validator_UniqueService',
             'doctrine.orm.validator_initializer' => 'getDoctrine_Orm_ValidatorInitializerService',
@@ -61,7 +61,6 @@ class TestsTestDebugProjectContainer extends Container
             'doctrine_cache.providers.doctrine.orm.default_result_cache' => 'getDoctrineCache_Providers_Doctrine_Orm_DefaultResultCacheService',
             'file_locator' => 'getFileLocatorService',
             'filesystem' => 'getFilesystemService',
-            'form.csrf_provider' => 'getForm_CsrfProviderService',
             'form.factory' => 'getForm_FactoryService',
             'form.registry' => 'getForm_RegistryService',
             'form.resolved_type_factory' => 'getForm_ResolvedTypeFactoryService',
@@ -124,7 +123,6 @@ class TestsTestDebugProjectContainer extends Container
             'ogone.secure_configuration' => 'getOgone_SecureConfigurationService',
             'ogone.transaction_builder' => 'getOgone_TransactionBuilderService',
             'property_accessor' => 'getPropertyAccessorService',
-            'request' => 'getRequestService',
             'request_stack' => 'getRequestStackService',
             'response_listener' => 'getResponseListenerService',
             'router' => 'getRouterService',
@@ -132,7 +130,6 @@ class TestsTestDebugProjectContainer extends Container
             'router_listener' => 'getRouterListenerService',
             'routing.loader' => 'getRouting_LoaderService',
             'security.csrf.token_manager' => 'getSecurity_Csrf_TokenManagerService',
-            'security.secure_random' => 'getSecurity_SecureRandomService',
             'service_container' => 'getServiceContainerService',
             'session' => 'getSessionService',
             'session.handler' => 'getSession_HandlerService',
@@ -145,8 +142,6 @@ class TestsTestDebugProjectContainer extends Container
             'streamed_response_listener' => 'getStreamedResponseListenerService',
             'templating' => 'getTemplatingService',
             'templating.filename_parser' => 'getTemplating_FilenameParserService',
-            'templating.helper.assets' => 'getTemplating_Helper_AssetsService',
-            'templating.helper.router' => 'getTemplating_Helper_RouterService',
             'templating.loader' => 'getTemplating_LoaderService',
             'templating.locator' => 'getTemplating_LocatorService',
             'templating.name_parser' => 'getTemplating_NameParserService',
@@ -252,6 +247,45 @@ class TestsTestDebugProjectContainer extends Container
     }
 
     /**
+     * Gets the 'cache.app' service.
+     *
+     * This service is shared.
+     * This method always returns the same instance of the service.
+     *
+     * @return \Symfony\Component\Cache\Adapter\FilesystemAdapter A Symfony\Component\Cache\Adapter\FilesystemAdapter instance
+     */
+    protected function getCache_AppService()
+    {
+        return $this->services['cache.app'] = new \Symfony\Component\Cache\Adapter\FilesystemAdapter('YfMBlEwNFe', '', (__DIR__.'/pools'));
+    }
+
+    /**
+     * Gets the 'cache.default_redis_provider' service.
+     *
+     * This service is shared.
+     * This method always returns the same instance of the service.
+     *
+     * @return \Redis A Redis instance
+     */
+    protected function getCache_DefaultRedisProviderService()
+    {
+        return $this->services['cache.default_redis_provider'] = \Symfony\Component\Cache\Adapter\RedisAdapter::createConnection('redis://localhost');
+    }
+
+    /**
+     * Gets the 'cache.system' service.
+     *
+     * This service is shared.
+     * This method always returns the same instance of the service.
+     *
+     * @return \Symfony\Component\Cache\Adapter\AdapterInterface A Symfony\Component\Cache\Adapter\AdapterInterface instance
+     */
+    protected function getCache_SystemService()
+    {
+        return $this->services['cache.system'] = \Symfony\Component\Cache\Adapter\AbstractAdapter::createSystemCache('z9JqtpbDbx', '', 'TsDW0P+a1gEl7ZMuJJBlAw', (__DIR__.'/pools'), NULL);
+    }
+
+    /**
      * Gets the 'cache_clearer' service.
      *
      * This service is shared.
@@ -261,7 +295,13 @@ class TestsTestDebugProjectContainer extends Container
      */
     protected function getCacheClearerService()
     {
-        return $this->services['cache_clearer'] = new \Symfony\Component\HttpKernel\CacheClearer\ChainCacheClearer(array());
+        $a = new \Symfony\Component\HttpKernel\CacheClearer\Psr6CacheClearer();
+        $a->addPool($this->get('cache.app'));
+        $a->addPool($this->get('cache.system'));
+        $a->addPool(\Symfony\Component\Cache\Adapter\AbstractAdapter::createSystemCache('Z6EOumDGm7', '', 'TsDW0P+a1gEl7ZMuJJBlAw', (__DIR__.'/pools'), NULL));
+        $a->addPool(\Symfony\Component\Cache\Adapter\AbstractAdapter::createSystemCache('za6CZOYHLw', '', 'TsDW0P+a1gEl7ZMuJJBlAw', (__DIR__.'/pools'), NULL));
+
+        return $this->services['cache_clearer'] = new \Symfony\Component\HttpKernel\CacheClearer\ChainCacheClearer(array(0 => $a));
     }
 
     /**
@@ -292,7 +332,20 @@ class TestsTestDebugProjectContainer extends Container
      */
     protected function getConfigCacheFactoryService()
     {
-        return $this->services['config_cache_factory'] = new \Symfony\Component\Config\ResourceCheckerConfigCacheFactory(array(0 => new \Symfony\Component\Config\Resource\SelfCheckingResourceChecker(), 1 => new \Symfony\Component\Config\Resource\BCResourceInterfaceChecker()));
+        return $this->services['config_cache_factory'] = new \Symfony\Component\Config\ResourceCheckerConfigCacheFactory(array(0 => new \Symfony\Component\Config\Resource\SelfCheckingResourceChecker()));
+    }
+
+    /**
+     * Gets the 'debug.argument_resolver' service.
+     *
+     * This service is shared.
+     * This method always returns the same instance of the service.
+     *
+     * @return \Symfony\Component\HttpKernel\Controller\TraceableArgumentResolver A Symfony\Component\HttpKernel\Controller\TraceableArgumentResolver instance
+     */
+    protected function getDebug_ArgumentResolverService()
+    {
+        return $this->services['debug.argument_resolver'] = new \Symfony\Component\HttpKernel\Controller\TraceableArgumentResolver(new \Symfony\Component\HttpKernel\Controller\ArgumentResolver(new \Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory(), array(0 => new \Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestAttributeValueResolver(), 1 => new \Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestValueResolver(), 2 => new \Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver(), 3 => new \Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver())), $this->get('debug.stopwatch'));
     }
 
     /**
@@ -305,7 +358,7 @@ class TestsTestDebugProjectContainer extends Container
      */
     protected function getDebug_ControllerResolverService()
     {
-        return $this->services['debug.controller_resolver'] = new \Symfony\Component\HttpKernel\Controller\TraceableControllerResolver(new \Symfony\Bundle\FrameworkBundle\Controller\ControllerResolver($this, $this->get('controller_name_converter'), NULL), $this->get('debug.stopwatch'));
+        return $this->services['debug.controller_resolver'] = new \Symfony\Component\HttpKernel\Controller\TraceableControllerResolver(new \Symfony\Bundle\FrameworkBundle\Controller\ControllerResolver($this, $this->get('controller_name_converter'), NULL), $this->get('debug.stopwatch'), $this->get('debug.argument_resolver'));
     }
 
     /**
@@ -318,7 +371,7 @@ class TestsTestDebugProjectContainer extends Container
      */
     protected function getDebug_DebugHandlersListenerService()
     {
-        return $this->services['debug.debug_handlers_listener'] = new \Symfony\Component\HttpKernel\EventListener\DebugHandlersListener(NULL, NULL, -4182, NULL, true, NULL);
+        return $this->services['debug.debug_handlers_listener'] = new \Symfony\Component\HttpKernel\EventListener\DebugHandlersListener(NULL, NULL, 28586, NULL, true, NULL);
     }
 
     /**
@@ -403,7 +456,10 @@ class TestsTestDebugProjectContainer extends Container
         $b = new \Doctrine\DBAL\Configuration();
         $b->setSQLLogger($a);
 
-        return $this->services['doctrine.dbal.default_connection'] = $this->get('doctrine.dbal.connection_factory')->createConnection(array('driver' => 'pdo_mysql', 'host' => '127.0.0.1', 'port' => NULL, 'dbname' => 'ogone', 'user' => 'root', 'password' => 'qsz3wdx', 'charset' => 'UTF8', 'driverOptions' => array(), 'defaultTableOptions' => array()), $b, new \Symfony\Bridge\Doctrine\ContainerAwareEventManager($this), array());
+        $c = new \Symfony\Bridge\Doctrine\ContainerAwareEventManager($this);
+        $c->addEventListener(array(0 => 'loadClassMetadata'), $this->get('doctrine.orm.default_listeners.attach_entity_listeners'));
+
+        return $this->services['doctrine.dbal.default_connection'] = $this->get('doctrine.dbal.connection_factory')->createConnection(array('driver' => 'pdo_mysql', 'host' => '127.0.0.1', 'port' => NULL, 'dbname' => 'ogone', 'user' => 'root', 'password' => 'qsz3wdx', 'charset' => 'UTF8', 'driverOptions' => array(), 'defaultTableOptions' => array()), $b, $c, array());
     }
 
     /**
@@ -465,6 +521,19 @@ class TestsTestDebugProjectContainer extends Container
     protected function getDoctrine_Orm_DefaultEntityManager_PropertyInfoExtractorService()
     {
         return $this->services['doctrine.orm.default_entity_manager.property_info_extractor'] = new \Symfony\Bridge\Doctrine\PropertyInfo\DoctrineExtractor($this->get('doctrine.orm.default_entity_manager')->getMetadataFactory());
+    }
+
+    /**
+     * Gets the 'doctrine.orm.default_listeners.attach_entity_listeners' service.
+     *
+     * This service is shared.
+     * This method always returns the same instance of the service.
+     *
+     * @return \Doctrine\ORM\Tools\AttachEntityListenersListener A Doctrine\ORM\Tools\AttachEntityListenersListener instance
+     */
+    protected function getDoctrine_Orm_DefaultListeners_AttachEntityListenersService()
+    {
+        return $this->services['doctrine.orm.default_listeners.attach_entity_listeners'] = new \Doctrine\ORM\Tools\AttachEntityListenersListener();
     }
 
     /**
@@ -584,23 +653,6 @@ class TestsTestDebugProjectContainer extends Container
     }
 
     /**
-     * Gets the 'form.csrf_provider' service.
-     *
-     * This service is shared.
-     * This method always returns the same instance of the service.
-     *
-     * @return \Symfony\Component\Form\Extension\Csrf\CsrfProvider\CsrfTokenManagerAdapter A Symfony\Component\Form\Extension\Csrf\CsrfProvider\CsrfTokenManagerAdapter instance
-     *
-     * @deprecated The "form.csrf_provider" service is deprecated since Symfony 2.4 and will be removed in 3.0. Use the "security.csrf.token_manager" service instead.
-     */
-    protected function getForm_CsrfProviderService()
-    {
-        @trigger_error('The "form.csrf_provider" service is deprecated since Symfony 2.4 and will be removed in 3.0. Use the "security.csrf.token_manager" service instead.', E_USER_DEPRECATED);
-
-        return $this->services['form.csrf_provider'] = new \Symfony\Component\Form\Extension\Csrf\CsrfProvider\CsrfTokenManagerAdapter($this->get('security.csrf.token_manager'));
-    }
-
-    /**
      * Gets the 'form.factory' service.
      *
      * This service is shared.
@@ -623,7 +675,7 @@ class TestsTestDebugProjectContainer extends Container
      */
     protected function getForm_RegistryService()
     {
-        return $this->services['form.registry'] = new \Symfony\Component\Form\FormRegistry(array(0 => new \Symfony\Component\Form\Extension\DependencyInjection\DependencyInjectionExtension($this, array('form' => 'form.type.form', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\FormType' => 'form.type.form', 'birthday' => 'form.type.birthday', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\BirthdayType' => 'form.type.birthday', 'checkbox' => 'form.type.checkbox', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\CheckboxType' => 'form.type.checkbox', 'choice' => 'form.type.choice', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\ChoiceType' => 'form.type.choice', 'collection' => 'form.type.collection', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\CollectionType' => 'form.type.collection', 'country' => 'form.type.country', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\CountryType' => 'form.type.country', 'date' => 'form.type.date', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\DateType' => 'form.type.date', 'datetime' => 'form.type.datetime', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\DateTimeType' => 'form.type.datetime', 'email' => 'form.type.email', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\EmailType' => 'form.type.email', 'file' => 'form.type.file', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\FileType' => 'form.type.file', 'hidden' => 'form.type.hidden', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\HiddenType' => 'form.type.hidden', 'integer' => 'form.type.integer', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\IntegerType' => 'form.type.integer', 'language' => 'form.type.language', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\LanguageType' => 'form.type.language', 'locale' => 'form.type.locale', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\LocaleType' => 'form.type.locale', 'money' => 'form.type.money', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\MoneyType' => 'form.type.money', 'number' => 'form.type.number', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\NumberType' => 'form.type.number', 'password' => 'form.type.password', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\PasswordType' => 'form.type.password', 'percent' => 'form.type.percent', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\PercentType' => 'form.type.percent', 'radio' => 'form.type.radio', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\RadioType' => 'form.type.radio', 'range' => 'form.type.range', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\RangeType' => 'form.type.range', 'repeated' => 'form.type.repeated', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\RepeatedType' => 'form.type.repeated', 'search' => 'form.type.search', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\SearchType' => 'form.type.search', 'textarea' => 'form.type.textarea', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\TextareaType' => 'form.type.textarea', 'text' => 'form.type.text', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\TextType' => 'form.type.text', 'time' => 'form.type.time', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\TimeType' => 'form.type.time', 'timezone' => 'form.type.timezone', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\TimezoneType' => 'form.type.timezone', 'url' => 'form.type.url', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\UrlType' => 'form.type.url', 'button' => 'form.type.button', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\ButtonType' => 'form.type.button', 'submit' => 'form.type.submit', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\SubmitType' => 'form.type.submit', 'reset' => 'form.type.reset', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\ResetType' => 'form.type.reset', 'currency' => 'form.type.currency', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\CurrencyType' => 'form.type.currency', 'entity' => 'form.type.entity', 'Symfony\\Bridge\\Doctrine\\Form\\Type\\EntityType' => 'form.type.entity'), array('Symfony\\Component\\Form\\Extension\\Core\\Type\\FormType' => array(0 => 'form.type_extension.form.http_foundation', 1 => 'form.type_extension.form.validator', 2 => 'form.type_extension.upload.validator', 3 => 'form.type_extension.csrf'), 'Symfony\\Component\\Form\\Extension\\Core\\Type\\RepeatedType' => array(0 => 'form.type_extension.repeated.validator'), 'Symfony\\Component\\Form\\Extension\\Core\\Type\\SubmitType' => array(0 => 'form.type_extension.submit.validator')), array(0 => 'form.type_guesser.validator', 1 => 'form.type_guesser.doctrine'))), $this->get('form.resolved_type_factory'));
+        return $this->services['form.registry'] = new \Symfony\Component\Form\FormRegistry(array(0 => new \Symfony\Component\Form\Extension\DependencyInjection\DependencyInjectionExtension($this, array('Symfony\\Component\\Form\\Extension\\Core\\Type\\FormType' => 'form.type.form', 'Symfony\\Component\\Form\\Extension\\Core\\Type\\ChoiceType' => 'form.type.choice', 'Symfony\\Bridge\\Doctrine\\Form\\Type\\EntityType' => 'form.type.entity'), array('Symfony\\Component\\Form\\Extension\\Core\\Type\\FormType' => array(0 => 'form.type_extension.form.http_foundation', 1 => 'form.type_extension.form.validator', 2 => 'form.type_extension.upload.validator', 3 => 'form.type_extension.csrf'), 'Symfony\\Component\\Form\\Extension\\Core\\Type\\RepeatedType' => array(0 => 'form.type_extension.repeated.validator'), 'Symfony\\Component\\Form\\Extension\\Core\\Type\\SubmitType' => array(0 => 'form.type_extension.submit.validator')), array(0 => 'form.type_guesser.validator', 1 => 'form.type_guesser.doctrine'))), $this->get('form.resolved_type_factory'));
     }
 
     /**
@@ -646,9 +698,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\BirthdayType A Symfony\Component\Form\Extension\Core\Type\BirthdayType instance
+     *
+     * @deprecated The "form.type.birthday" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_BirthdayService()
     {
+        @trigger_error('The "form.type.birthday" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.birthday'] = new \Symfony\Component\Form\Extension\Core\Type\BirthdayType();
     }
 
@@ -659,9 +715,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\ButtonType A Symfony\Component\Form\Extension\Core\Type\ButtonType instance
+     *
+     * @deprecated The "form.type.button" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_ButtonService()
     {
+        @trigger_error('The "form.type.button" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.button'] = new \Symfony\Component\Form\Extension\Core\Type\ButtonType();
     }
 
@@ -672,9 +732,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\CheckboxType A Symfony\Component\Form\Extension\Core\Type\CheckboxType instance
+     *
+     * @deprecated The "form.type.checkbox" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_CheckboxService()
     {
+        @trigger_error('The "form.type.checkbox" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.checkbox'] = new \Symfony\Component\Form\Extension\Core\Type\CheckboxType();
     }
 
@@ -698,9 +762,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\CollectionType A Symfony\Component\Form\Extension\Core\Type\CollectionType instance
+     *
+     * @deprecated The "form.type.collection" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_CollectionService()
     {
+        @trigger_error('The "form.type.collection" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.collection'] = new \Symfony\Component\Form\Extension\Core\Type\CollectionType();
     }
 
@@ -711,9 +779,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\CountryType A Symfony\Component\Form\Extension\Core\Type\CountryType instance
+     *
+     * @deprecated The "form.type.country" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_CountryService()
     {
+        @trigger_error('The "form.type.country" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.country'] = new \Symfony\Component\Form\Extension\Core\Type\CountryType();
     }
 
@@ -724,9 +796,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\CurrencyType A Symfony\Component\Form\Extension\Core\Type\CurrencyType instance
+     *
+     * @deprecated The "form.type.currency" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_CurrencyService()
     {
+        @trigger_error('The "form.type.currency" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.currency'] = new \Symfony\Component\Form\Extension\Core\Type\CurrencyType();
     }
 
@@ -737,9 +813,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\DateType A Symfony\Component\Form\Extension\Core\Type\DateType instance
+     *
+     * @deprecated The "form.type.date" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_DateService()
     {
+        @trigger_error('The "form.type.date" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.date'] = new \Symfony\Component\Form\Extension\Core\Type\DateType();
     }
 
@@ -750,9 +830,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\DateTimeType A Symfony\Component\Form\Extension\Core\Type\DateTimeType instance
+     *
+     * @deprecated The "form.type.datetime" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_DatetimeService()
     {
+        @trigger_error('The "form.type.datetime" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.datetime'] = new \Symfony\Component\Form\Extension\Core\Type\DateTimeType();
     }
 
@@ -763,9 +847,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\EmailType A Symfony\Component\Form\Extension\Core\Type\EmailType instance
+     *
+     * @deprecated The "form.type.email" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_EmailService()
     {
+        @trigger_error('The "form.type.email" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.email'] = new \Symfony\Component\Form\Extension\Core\Type\EmailType();
     }
 
@@ -789,9 +877,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\FileType A Symfony\Component\Form\Extension\Core\Type\FileType instance
+     *
+     * @deprecated The "form.type.file" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_FileService()
     {
+        @trigger_error('The "form.type.file" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.file'] = new \Symfony\Component\Form\Extension\Core\Type\FileType();
     }
 
@@ -815,9 +907,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\HiddenType A Symfony\Component\Form\Extension\Core\Type\HiddenType instance
+     *
+     * @deprecated The "form.type.hidden" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_HiddenService()
     {
+        @trigger_error('The "form.type.hidden" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.hidden'] = new \Symfony\Component\Form\Extension\Core\Type\HiddenType();
     }
 
@@ -828,9 +924,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\IntegerType A Symfony\Component\Form\Extension\Core\Type\IntegerType instance
+     *
+     * @deprecated The "form.type.integer" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_IntegerService()
     {
+        @trigger_error('The "form.type.integer" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.integer'] = new \Symfony\Component\Form\Extension\Core\Type\IntegerType();
     }
 
@@ -841,9 +941,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\LanguageType A Symfony\Component\Form\Extension\Core\Type\LanguageType instance
+     *
+     * @deprecated The "form.type.language" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_LanguageService()
     {
+        @trigger_error('The "form.type.language" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.language'] = new \Symfony\Component\Form\Extension\Core\Type\LanguageType();
     }
 
@@ -854,9 +958,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\LocaleType A Symfony\Component\Form\Extension\Core\Type\LocaleType instance
+     *
+     * @deprecated The "form.type.locale" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_LocaleService()
     {
+        @trigger_error('The "form.type.locale" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.locale'] = new \Symfony\Component\Form\Extension\Core\Type\LocaleType();
     }
 
@@ -867,9 +975,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\MoneyType A Symfony\Component\Form\Extension\Core\Type\MoneyType instance
+     *
+     * @deprecated The "form.type.money" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_MoneyService()
     {
+        @trigger_error('The "form.type.money" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.money'] = new \Symfony\Component\Form\Extension\Core\Type\MoneyType();
     }
 
@@ -880,9 +992,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\NumberType A Symfony\Component\Form\Extension\Core\Type\NumberType instance
+     *
+     * @deprecated The "form.type.number" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_NumberService()
     {
+        @trigger_error('The "form.type.number" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.number'] = new \Symfony\Component\Form\Extension\Core\Type\NumberType();
     }
 
@@ -893,9 +1009,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\PasswordType A Symfony\Component\Form\Extension\Core\Type\PasswordType instance
+     *
+     * @deprecated The "form.type.password" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_PasswordService()
     {
+        @trigger_error('The "form.type.password" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.password'] = new \Symfony\Component\Form\Extension\Core\Type\PasswordType();
     }
 
@@ -906,9 +1026,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\PercentType A Symfony\Component\Form\Extension\Core\Type\PercentType instance
+     *
+     * @deprecated The "form.type.percent" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_PercentService()
     {
+        @trigger_error('The "form.type.percent" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.percent'] = new \Symfony\Component\Form\Extension\Core\Type\PercentType();
     }
 
@@ -919,9 +1043,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\RadioType A Symfony\Component\Form\Extension\Core\Type\RadioType instance
+     *
+     * @deprecated The "form.type.radio" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_RadioService()
     {
+        @trigger_error('The "form.type.radio" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.radio'] = new \Symfony\Component\Form\Extension\Core\Type\RadioType();
     }
 
@@ -932,9 +1060,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\RangeType A Symfony\Component\Form\Extension\Core\Type\RangeType instance
+     *
+     * @deprecated The "form.type.range" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_RangeService()
     {
+        @trigger_error('The "form.type.range" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.range'] = new \Symfony\Component\Form\Extension\Core\Type\RangeType();
     }
 
@@ -945,9 +1077,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\RepeatedType A Symfony\Component\Form\Extension\Core\Type\RepeatedType instance
+     *
+     * @deprecated The "form.type.repeated" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_RepeatedService()
     {
+        @trigger_error('The "form.type.repeated" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.repeated'] = new \Symfony\Component\Form\Extension\Core\Type\RepeatedType();
     }
 
@@ -958,9 +1094,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\ResetType A Symfony\Component\Form\Extension\Core\Type\ResetType instance
+     *
+     * @deprecated The "form.type.reset" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_ResetService()
     {
+        @trigger_error('The "form.type.reset" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.reset'] = new \Symfony\Component\Form\Extension\Core\Type\ResetType();
     }
 
@@ -971,9 +1111,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\SearchType A Symfony\Component\Form\Extension\Core\Type\SearchType instance
+     *
+     * @deprecated The "form.type.search" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_SearchService()
     {
+        @trigger_error('The "form.type.search" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.search'] = new \Symfony\Component\Form\Extension\Core\Type\SearchType();
     }
 
@@ -984,9 +1128,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\SubmitType A Symfony\Component\Form\Extension\Core\Type\SubmitType instance
+     *
+     * @deprecated The "form.type.submit" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_SubmitService()
     {
+        @trigger_error('The "form.type.submit" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.submit'] = new \Symfony\Component\Form\Extension\Core\Type\SubmitType();
     }
 
@@ -997,9 +1145,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\TextType A Symfony\Component\Form\Extension\Core\Type\TextType instance
+     *
+     * @deprecated The "form.type.text" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_TextService()
     {
+        @trigger_error('The "form.type.text" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.text'] = new \Symfony\Component\Form\Extension\Core\Type\TextType();
     }
 
@@ -1010,9 +1162,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\TextareaType A Symfony\Component\Form\Extension\Core\Type\TextareaType instance
+     *
+     * @deprecated The "form.type.textarea" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_TextareaService()
     {
+        @trigger_error('The "form.type.textarea" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.textarea'] = new \Symfony\Component\Form\Extension\Core\Type\TextareaType();
     }
 
@@ -1023,9 +1179,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\TimeType A Symfony\Component\Form\Extension\Core\Type\TimeType instance
+     *
+     * @deprecated The "form.type.time" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_TimeService()
     {
+        @trigger_error('The "form.type.time" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.time'] = new \Symfony\Component\Form\Extension\Core\Type\TimeType();
     }
 
@@ -1036,9 +1196,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\TimezoneType A Symfony\Component\Form\Extension\Core\Type\TimezoneType instance
+     *
+     * @deprecated The "form.type.timezone" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_TimezoneService()
     {
+        @trigger_error('The "form.type.timezone" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.timezone'] = new \Symfony\Component\Form\Extension\Core\Type\TimezoneType();
     }
 
@@ -1049,9 +1213,13 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Symfony\Component\Form\Extension\Core\Type\UrlType A Symfony\Component\Form\Extension\Core\Type\UrlType instance
+     *
+     * @deprecated The "form.type.url" service is deprecated since Symfony 3.1 and will be removed in 4.0.
      */
     protected function getForm_Type_UrlService()
     {
+        @trigger_error('The "form.type.url" service is deprecated since Symfony 3.1 and will be removed in 4.0.', E_USER_DEPRECATED);
+
         return $this->services['form.type.url'] = new \Symfony\Component\Form\Extension\Core\Type\UrlType();
     }
 
@@ -1254,11 +1422,11 @@ class TestsTestDebugProjectContainer extends Container
      * This service is shared.
      * This method always returns the same instance of the service.
      *
-     * @return \Symfony\Component\HttpKernel\DependencyInjection\ContainerAwareHttpKernel A Symfony\Component\HttpKernel\DependencyInjection\ContainerAwareHttpKernel instance
+     * @return \Symfony\Component\HttpKernel\HttpKernel A Symfony\Component\HttpKernel\HttpKernel instance
      */
     protected function getHttpKernelService()
     {
-        return $this->services['http_kernel'] = new \Symfony\Component\HttpKernel\DependencyInjection\ContainerAwareHttpKernel($this->get('debug.event_dispatcher'), $this, $this->get('debug.controller_resolver'), $this->get('request_stack'), false);
+        return $this->services['http_kernel'] = new \Symfony\Component\HttpKernel\HttpKernel($this->get('debug.event_dispatcher'), $this->get('debug.controller_resolver'), $this->get('request_stack'), $this->get('debug.argument_resolver'));
     }
 
     /**
@@ -1372,16 +1540,10 @@ class TestsTestDebugProjectContainer extends Container
      * This method always returns the same instance of the service.
      *
      * @return \Pilot\OgonePaymentBundle\Feedback\TransactionFeedbacker A Pilot\OgonePaymentBundle\Feedback\TransactionFeedbacker instance
-     *
-     * @throws InactiveScopeException when the 'ogone.feedbacker' service is requested while the 'request' scope is not active
      */
     protected function getOgone_FeedbackerService()
     {
-        if (!isset($this->scopedServices['request'])) {
-            throw new InactiveScopeException('ogone.feedbacker', 'request');
-        }
-
-        return $this->services['ogone.feedbacker'] = $this->scopedServices['request']['ogone.feedbacker'] = new \Pilot\OgonePaymentBundle\Feedback\TransactionFeedbacker($this->get('request'), $this->get('ogone.secure_configuration'), $this->get('doctrine.orm.default_entity_manager'));
+        return $this->services['ogone.feedbacker'] = new \Pilot\OgonePaymentBundle\Feedback\TransactionFeedbacker($this->get('request_stack'), $this->get('ogone.secure_configuration'), $this->get('doctrine.orm.default_entity_manager'));
     }
 
     /**
@@ -1421,25 +1583,6 @@ class TestsTestDebugProjectContainer extends Container
     protected function getPropertyAccessorService()
     {
         return $this->services['property_accessor'] = new \Symfony\Component\PropertyAccess\PropertyAccessor(false, false);
-    }
-
-    /**
-     * Gets the 'request' service.
-     *
-     * This service is shared.
-     * This method always returns the same instance of the service.
-     *
-     * @throws RuntimeException always since this service is expected to be injected dynamically
-     * @throws InactiveScopeException when the 'request' service is requested while the 'request' scope is not active
-     * @deprecated The "request" service is deprecated since Symfony 2.7 and will be removed in 3.0. Use the "request_stack" service instead.
-     */
-    protected function getRequestService()
-    {
-        if (!isset($this->scopedServices['request'])) {
-            throw new InactiveScopeException('request', 'request');
-        }
-
-        throw new RuntimeException('You have requested a synthetic service ("request"). The DIC does not know how to construct this service.');
     }
 
     /**
@@ -1531,23 +1674,6 @@ class TestsTestDebugProjectContainer extends Container
     protected function getSecurity_Csrf_TokenManagerService()
     {
         return $this->services['security.csrf.token_manager'] = new \Symfony\Component\Security\Csrf\CsrfTokenManager(new \Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator(), new \Symfony\Component\Security\Csrf\TokenStorage\SessionTokenStorage($this->get('session')));
-    }
-
-    /**
-     * Gets the 'security.secure_random' service.
-     *
-     * This service is shared.
-     * This method always returns the same instance of the service.
-     *
-     * @return \Symfony\Component\Security\Core\Util\SecureRandom A Symfony\Component\Security\Core\Util\SecureRandom instance
-     *
-     * @deprecated The "security.secure_random" service is deprecated since Symfony 2.8 and will be removed in 3.0. Use the random_bytes() function instead.
-     */
-    protected function getSecurity_SecureRandomService()
-    {
-        @trigger_error('The "security.secure_random" service is deprecated since Symfony 2.8 and will be removed in 3.0. Use the random_bytes() function instead.', E_USER_DEPRECATED);
-
-        return $this->services['security.secure_random'] = new \Symfony\Component\Security\Core\Util\SecureRandom();
     }
 
     /**
@@ -1691,32 +1817,6 @@ class TestsTestDebugProjectContainer extends Container
     protected function getTemplating_FilenameParserService()
     {
         return $this->services['templating.filename_parser'] = new \Symfony\Bundle\FrameworkBundle\Templating\TemplateFilenameParser();
-    }
-
-    /**
-     * Gets the 'templating.helper.assets' service.
-     *
-     * This service is shared.
-     * This method always returns the same instance of the service.
-     *
-     * @return \Symfony\Bundle\FrameworkBundle\Templating\Helper\AssetsHelper A Symfony\Bundle\FrameworkBundle\Templating\Helper\AssetsHelper instance
-     */
-    protected function getTemplating_Helper_AssetsService()
-    {
-        return $this->services['templating.helper.assets'] = new \Symfony\Bundle\FrameworkBundle\Templating\Helper\AssetsHelper($this->get('assets.packages'), array());
-    }
-
-    /**
-     * Gets the 'templating.helper.router' service.
-     *
-     * This service is shared.
-     * This method always returns the same instance of the service.
-     *
-     * @return \Symfony\Bundle\FrameworkBundle\Templating\Helper\RouterHelper A Symfony\Bundle\FrameworkBundle\Templating\Helper\RouterHelper instance
-     */
-    protected function getTemplating_Helper_RouterService()
-    {
-        return $this->services['templating.helper.router'] = new \Symfony\Bundle\FrameworkBundle\Templating\Helper\RouterHelper($this->get('router'));
     }
 
     /**
@@ -2160,37 +2260,31 @@ class TestsTestDebugProjectContainer extends Container
     {
         $a = $this->get('debug.stopwatch', ContainerInterface::NULL_ON_INVALID_REFERENCE);
         $b = $this->get('request_stack');
-        $c = $this->get('router.request_context', ContainerInterface::NULL_ON_INVALID_REFERENCE);
-        $d = $this->get('fragment.handler');
 
-        $e = new \Symfony\Bridge\Twig\Extension\HttpFoundationExtension($b, $c);
-
-        $f = new \Symfony\Bridge\Twig\AppVariable();
-        $f->setEnvironment('test');
-        $f->setDebug(true);
+        $c = new \Symfony\Bridge\Twig\AppVariable();
+        $c->setEnvironment('test');
+        $c->setDebug(true);
         if ($this->has('request_stack')) {
-            $f->setRequestStack($b);
+            $c->setRequestStack($b);
         }
-        $f->setContainer($this);
 
         $this->services['twig'] = $instance = new \Twig_Environment($this->get('twig.loader'), array('exception_controller' => 'twig.controller.exception:showAction', 'form_themes' => array(0 => 'form_div_layout.html.twig'), 'autoescape' => 'filename', 'cache' => (__DIR__.'/twig'), 'charset' => 'UTF-8', 'debug' => true, 'paths' => array(), 'date' => array('format' => 'F j, Y H:i', 'interval_format' => '%d days', 'timezone' => NULL), 'number_format' => array('decimals' => 0, 'decimal_point' => '.', 'thousands_separator' => ',')));
 
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\ProfilerExtension($this->get('twig.profile'), $a));
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\TranslationExtension($this->get('translator')));
-        $instance->addExtension(new \Symfony\Bridge\Twig\Extension\AssetExtension($this->get('assets.packages'), $e));
-        $instance->addExtension(new \Symfony\Bundle\TwigBundle\Extension\ActionsExtension($d));
+        $instance->addExtension(new \Symfony\Bridge\Twig\Extension\AssetExtension($this->get('assets.packages')));
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\CodeExtension(NULL, $this->targetDirs[2], 'UTF-8'));
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\RoutingExtension($this->get('router')));
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\YamlExtension());
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\StopwatchExtension($a, true));
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\ExpressionExtension());
-        $instance->addExtension(new \Symfony\Bridge\Twig\Extension\HttpKernelExtension($d));
-        $instance->addExtension($e);
+        $instance->addExtension(new \Symfony\Bridge\Twig\Extension\HttpKernelExtension($this->get('fragment.handler')));
+        $instance->addExtension(new \Symfony\Bridge\Twig\Extension\HttpFoundationExtension($b, $this->get('router.request_context', ContainerInterface::NULL_ON_INVALID_REFERENCE)));
         $instance->addExtension(new \Symfony\Bridge\Twig\Extension\FormExtension(new \Symfony\Bridge\Twig\Form\TwigRenderer(new \Symfony\Bridge\Twig\Form\TwigRendererEngine(array(0 => 'form_div_layout.html.twig')), $this->get('security.csrf.token_manager', ContainerInterface::NULL_ON_INVALID_REFERENCE))));
         $instance->addExtension(new \Twig_Extension_Debug());
         $instance->addExtension(new \Doctrine\Bundle\DoctrineBundle\Twig\DoctrineExtension());
-        $instance->addGlobal('app', $f);
-        call_user_func(array(new \Symfony\Bundle\TwigBundle\DependencyInjection\Configurator\EnvironmentConfigurator('F j, Y H:i', '%d days', NULL, 0, '.', ','), 'configure'), $instance);
+        $instance->addGlobal('app', $c);
+        (new \Symfony\Bundle\TwigBundle\DependencyInjection\Configurator\EnvironmentConfigurator('F j, Y H:i', '%d days', NULL, 0, '.', ','))->configure($instance);
 
         return $instance;
     }
@@ -2366,7 +2460,7 @@ class TestsTestDebugProjectContainer extends Container
      */
     protected function getValidator_ExpressionService()
     {
-        return $this->services['validator.expression'] = new \Symfony\Component\Validator\Constraints\ExpressionValidator($this->get('property_accessor'));
+        return $this->services['validator.expression'] = new \Symfony\Component\Validator\Constraints\ExpressionValidator();
     }
 
     /**
@@ -2537,54 +2631,8 @@ class TestsTestDebugProjectContainer extends Container
             ),
             'kernel.charset' => 'UTF-8',
             'kernel.container_class' => 'TestsTestDebugProjectContainer',
-            'controller_resolver.class' => 'Symfony\\Bundle\\FrameworkBundle\\Controller\\ControllerResolver',
-            'controller_name_converter.class' => 'Symfony\\Bundle\\FrameworkBundle\\Controller\\ControllerNameParser',
-            'response_listener.class' => 'Symfony\\Component\\HttpKernel\\EventListener\\ResponseListener',
-            'streamed_response_listener.class' => 'Symfony\\Component\\HttpKernel\\EventListener\\StreamedResponseListener',
-            'locale_listener.class' => 'Symfony\\Component\\HttpKernel\\EventListener\\LocaleListener',
-            'event_dispatcher.class' => 'Symfony\\Component\\EventDispatcher\\ContainerAwareEventDispatcher',
-            'http_kernel.class' => 'Symfony\\Component\\HttpKernel\\DependencyInjection\\ContainerAwareHttpKernel',
-            'filesystem.class' => 'Symfony\\Component\\Filesystem\\Filesystem',
-            'cache_warmer.class' => 'Symfony\\Component\\HttpKernel\\CacheWarmer\\CacheWarmerAggregate',
-            'cache_clearer.class' => 'Symfony\\Component\\HttpKernel\\CacheClearer\\ChainCacheClearer',
-            'file_locator.class' => 'Symfony\\Component\\HttpKernel\\Config\\FileLocator',
-            'uri_signer.class' => 'Symfony\\Component\\HttpKernel\\UriSigner',
-            'request_stack.class' => 'Symfony\\Component\\HttpFoundation\\RequestStack',
-            'fragment.handler.class' => 'Symfony\\Component\\HttpKernel\\DependencyInjection\\LazyLoadingFragmentHandler',
-            'fragment.renderer.inline.class' => 'Symfony\\Component\\HttpKernel\\Fragment\\InlineFragmentRenderer',
-            'fragment.renderer.hinclude.class' => 'Symfony\\Component\\HttpKernel\\Fragment\\HIncludeFragmentRenderer',
             'fragment.renderer.hinclude.global_template' => NULL,
-            'fragment.renderer.esi.class' => 'Symfony\\Component\\HttpKernel\\Fragment\\EsiFragmentRenderer',
             'fragment.path' => '/_fragment',
-            'translator.class' => 'Symfony\\Bundle\\FrameworkBundle\\Translation\\Translator',
-            'translator.identity.class' => 'Symfony\\Component\\Translation\\IdentityTranslator',
-            'translator.selector.class' => 'Symfony\\Component\\Translation\\MessageSelector',
-            'translation.loader.php.class' => 'Symfony\\Component\\Translation\\Loader\\PhpFileLoader',
-            'translation.loader.yml.class' => 'Symfony\\Component\\Translation\\Loader\\YamlFileLoader',
-            'translation.loader.xliff.class' => 'Symfony\\Component\\Translation\\Loader\\XliffFileLoader',
-            'translation.loader.po.class' => 'Symfony\\Component\\Translation\\Loader\\PoFileLoader',
-            'translation.loader.mo.class' => 'Symfony\\Component\\Translation\\Loader\\MoFileLoader',
-            'translation.loader.qt.class' => 'Symfony\\Component\\Translation\\Loader\\QtFileLoader',
-            'translation.loader.csv.class' => 'Symfony\\Component\\Translation\\Loader\\CsvFileLoader',
-            'translation.loader.res.class' => 'Symfony\\Component\\Translation\\Loader\\IcuResFileLoader',
-            'translation.loader.dat.class' => 'Symfony\\Component\\Translation\\Loader\\IcuDatFileLoader',
-            'translation.loader.ini.class' => 'Symfony\\Component\\Translation\\Loader\\IniFileLoader',
-            'translation.loader.json.class' => 'Symfony\\Component\\Translation\\Loader\\JsonFileLoader',
-            'translation.dumper.php.class' => 'Symfony\\Component\\Translation\\Dumper\\PhpFileDumper',
-            'translation.dumper.xliff.class' => 'Symfony\\Component\\Translation\\Dumper\\XliffFileDumper',
-            'translation.dumper.po.class' => 'Symfony\\Component\\Translation\\Dumper\\PoFileDumper',
-            'translation.dumper.mo.class' => 'Symfony\\Component\\Translation\\Dumper\\MoFileDumper',
-            'translation.dumper.yml.class' => 'Symfony\\Component\\Translation\\Dumper\\YamlFileDumper',
-            'translation.dumper.qt.class' => 'Symfony\\Component\\Translation\\Dumper\\QtFileDumper',
-            'translation.dumper.csv.class' => 'Symfony\\Component\\Translation\\Dumper\\CsvFileDumper',
-            'translation.dumper.ini.class' => 'Symfony\\Component\\Translation\\Dumper\\IniFileDumper',
-            'translation.dumper.json.class' => 'Symfony\\Component\\Translation\\Dumper\\JsonFileDumper',
-            'translation.dumper.res.class' => 'Symfony\\Component\\Translation\\Dumper\\IcuResFileDumper',
-            'translation.extractor.php.class' => 'Symfony\\Bundle\\FrameworkBundle\\Translation\\PhpExtractor',
-            'translation.loader.class' => 'Symfony\\Bundle\\FrameworkBundle\\Translation\\TranslationLoader',
-            'translation.extractor.class' => 'Symfony\\Component\\Translation\\Extractor\\ChainExtractor',
-            'translation.writer.class' => 'Symfony\\Component\\Translation\\Writer\\TranslationWriter',
-            'property_accessor.class' => 'Symfony\\Component\\PropertyAccess\\PropertyAccessor',
             'kernel.secret' => 'SecretKeyForTests',
             'kernel.http_method_override' => true,
             'kernel.trusted_hosts' => array(
@@ -2594,81 +2642,33 @@ class TestsTestDebugProjectContainer extends Container
 
             ),
             'kernel.default_locale' => 'en',
-            'session.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Session',
-            'session.flashbag.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Flash\\FlashBag',
-            'session.attribute_bag.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Attribute\\AttributeBag',
-            'session.storage.metadata_bag.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Storage\\MetadataBag',
             'session.metadata.storage_key' => '_sf2_meta',
-            'session.storage.native.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Storage\\NativeSessionStorage',
-            'session.storage.php_bridge.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Storage\\PhpBridgeSessionStorage',
-            'session.storage.mock_file.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Storage\\MockFileSessionStorage',
-            'session.handler.native_file.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Storage\\Handler\\NativeFileSessionHandler',
-            'session.handler.write_check.class' => 'Symfony\\Component\\HttpFoundation\\Session\\Storage\\Handler\\WriteCheckSessionHandler',
-            'session_listener.class' => 'Symfony\\Bundle\\FrameworkBundle\\EventListener\\SessionListener',
             'session.storage.options' => array(
                 'cookie_httponly' => true,
                 'gc_probability' => 1,
             ),
             'session.save_path' => (__DIR__.'/sessions'),
             'session.metadata.update_threshold' => '0',
-            'security.secure_random.class' => 'Symfony\\Component\\Security\\Core\\Util\\SecureRandom',
-            'form.resolved_type_factory.class' => 'Symfony\\Component\\Form\\ResolvedFormTypeFactory',
-            'form.registry.class' => 'Symfony\\Component\\Form\\FormRegistry',
-            'form.factory.class' => 'Symfony\\Component\\Form\\FormFactory',
-            'form.extension.class' => 'Symfony\\Component\\Form\\Extension\\DependencyInjection\\DependencyInjectionExtension',
-            'form.type_guesser.validator.class' => 'Symfony\\Component\\Form\\Extension\\Validator\\ValidatorTypeGuesser',
-            'form.type_extension.form.request_handler.class' => 'Symfony\\Component\\Form\\Extension\\HttpFoundation\\HttpFoundationRequestHandler',
             'form.type_extension.csrf.enabled' => true,
             'form.type_extension.csrf.field_name' => '_token',
-            'security.csrf.token_generator.class' => 'Symfony\\Component\\Security\\Csrf\\TokenGenerator\\UriSafeTokenGenerator',
-            'security.csrf.token_storage.class' => 'Symfony\\Component\\Security\\Csrf\\TokenStorage\\SessionTokenStorage',
-            'security.csrf.token_manager.class' => 'Symfony\\Component\\Security\\Csrf\\CsrfTokenManager',
-            'templating.engine.delegating.class' => 'Symfony\\Bundle\\FrameworkBundle\\Templating\\DelegatingEngine',
-            'templating.name_parser.class' => 'Symfony\\Bundle\\FrameworkBundle\\Templating\\TemplateNameParser',
-            'templating.filename_parser.class' => 'Symfony\\Bundle\\FrameworkBundle\\Templating\\TemplateFilenameParser',
-            'templating.cache_warmer.template_paths.class' => 'Symfony\\Bundle\\FrameworkBundle\\CacheWarmer\\TemplatePathsCacheWarmer',
-            'templating.locator.class' => 'Symfony\\Bundle\\FrameworkBundle\\Templating\\Loader\\TemplateLocator',
-            'templating.loader.filesystem.class' => 'Symfony\\Bundle\\FrameworkBundle\\Templating\\Loader\\FilesystemLoader',
-            'templating.loader.cache.class' => 'Symfony\\Component\\Templating\\Loader\\CacheLoader',
-            'templating.loader.chain.class' => 'Symfony\\Component\\Templating\\Loader\\ChainLoader',
-            'templating.finder.class' => 'Symfony\\Bundle\\FrameworkBundle\\CacheWarmer\\TemplateFinder',
-            'templating.helper.assets.class' => 'Symfony\\Bundle\\FrameworkBundle\\Templating\\Helper\\AssetsHelper',
-            'templating.helper.router.class' => 'Symfony\\Bundle\\FrameworkBundle\\Templating\\Helper\\RouterHelper',
             'templating.helper.code.file_link_format' => NULL,
             'templating.loader.cache.path' => NULL,
             'templating.engines' => array(
                 0 => 'twig',
             ),
-            'validator.class' => 'Symfony\\Component\\Validator\\Validator\\ValidatorInterface',
-            'validator.builder.class' => 'Symfony\\Component\\Validator\\ValidatorBuilderInterface',
-            'validator.builder.factory.class' => 'Symfony\\Component\\Validator\\Validation',
-            'validator.mapping.cache.apc.class' => 'Symfony\\Component\\Validator\\Mapping\\Cache\\ApcCache',
             'validator.mapping.cache.prefix' => '',
-            'validator.validator_factory.class' => 'Symfony\\Bundle\\FrameworkBundle\\Validator\\ConstraintValidatorFactory',
-            'validator.expression.class' => 'Symfony\\Component\\Validator\\Constraints\\ExpressionValidator',
-            'validator.email.class' => 'Symfony\\Component\\Validator\\Constraints\\EmailValidator',
             'validator.translation_domain' => 'validators',
-            'validator.api' => '2.5-bc',
             'data_collector.templates' => array(
 
             ),
-            'router.class' => 'Symfony\\Bundle\\FrameworkBundle\\Routing\\Router',
-            'router.request_context.class' => 'Symfony\\Component\\Routing\\RequestContext',
-            'routing.loader.class' => 'Symfony\\Bundle\\FrameworkBundle\\Routing\\DelegatingLoader',
-            'routing.resolver.class' => 'Symfony\\Component\\Config\\Loader\\LoaderResolver',
-            'routing.loader.xml.class' => 'Symfony\\Component\\Routing\\Loader\\XmlFileLoader',
-            'routing.loader.yml.class' => 'Symfony\\Component\\Routing\\Loader\\YamlFileLoader',
-            'routing.loader.php.class' => 'Symfony\\Component\\Routing\\Loader\\PhpFileLoader',
             'router.options.generator_class' => 'Symfony\\Component\\Routing\\Generator\\UrlGenerator',
             'router.options.generator_base_class' => 'Symfony\\Component\\Routing\\Generator\\UrlGenerator',
             'router.options.generator_dumper_class' => 'Symfony\\Component\\Routing\\Generator\\Dumper\\PhpGeneratorDumper',
             'router.options.matcher_class' => 'Symfony\\Bundle\\FrameworkBundle\\Routing\\RedirectableUrlMatcher',
             'router.options.matcher_base_class' => 'Symfony\\Bundle\\FrameworkBundle\\Routing\\RedirectableUrlMatcher',
             'router.options.matcher_dumper_class' => 'Symfony\\Component\\Routing\\Matcher\\Dumper\\PhpMatcherDumper',
-            'router.cache_warmer.class' => 'Symfony\\Bundle\\FrameworkBundle\\CacheWarmer\\RouterCacheWarmer',
             'router.options.matcher.cache_class' => 'TestsTestUrlMatcher',
             'router.options.generator.cache_class' => 'TestsTestUrlGenerator',
-            'router_listener.class' => 'Symfony\\Component\\HttpKernel\\EventListener\\RouterListener',
             'router.request_context.host' => 'localhost',
             'router.request_context.scheme' => 'http',
             'router.request_context.base_url' => '',
@@ -2676,35 +2676,8 @@ class TestsTestDebugProjectContainer extends Container
             'router.cache_class_prefix' => 'TestsTest',
             'request_listener.http_port' => 80,
             'request_listener.https_port' => 443,
-            'annotations.reader.class' => 'Doctrine\\Common\\Annotations\\AnnotationReader',
-            'annotations.cached_reader.class' => 'Doctrine\\Common\\Annotations\\CachedReader',
-            'annotations.file_cache_reader.class' => 'Doctrine\\Common\\Annotations\\FileCacheReader',
-            'debug.debug_handlers_listener.class' => 'Symfony\\Component\\HttpKernel\\EventListener\\DebugHandlersListener',
-            'debug.stopwatch.class' => 'Symfony\\Component\\Stopwatch\\Stopwatch',
             'debug.error_handler.throw_at' => -1,
-            'debug.event_dispatcher.class' => 'Symfony\\Component\\HttpKernel\\Debug\\TraceableEventDispatcher',
             'debug.container.dump' => (__DIR__.'/TestsTestDebugProjectContainer.xml'),
-            'debug.controller_resolver.class' => 'Symfony\\Component\\HttpKernel\\Controller\\TraceableControllerResolver',
-            'twig.class' => 'Twig_Environment',
-            'twig.loader.filesystem.class' => 'Symfony\\Bundle\\TwigBundle\\Loader\\FilesystemLoader',
-            'twig.loader.chain.class' => 'Twig_Loader_Chain',
-            'templating.engine.twig.class' => 'Symfony\\Bundle\\TwigBundle\\TwigEngine',
-            'twig.cache_warmer.class' => 'Symfony\\Bundle\\TwigBundle\\CacheWarmer\\TemplateCacheCacheWarmer',
-            'twig.extension.trans.class' => 'Symfony\\Bridge\\Twig\\Extension\\TranslationExtension',
-            'twig.extension.actions.class' => 'Symfony\\Bundle\\TwigBundle\\Extension\\ActionsExtension',
-            'twig.extension.code.class' => 'Symfony\\Bridge\\Twig\\Extension\\CodeExtension',
-            'twig.extension.routing.class' => 'Symfony\\Bridge\\Twig\\Extension\\RoutingExtension',
-            'twig.extension.yaml.class' => 'Symfony\\Bridge\\Twig\\Extension\\YamlExtension',
-            'twig.extension.form.class' => 'Symfony\\Bridge\\Twig\\Extension\\FormExtension',
-            'twig.extension.httpkernel.class' => 'Symfony\\Bridge\\Twig\\Extension\\HttpKernelExtension',
-            'twig.extension.debug.stopwatch.class' => 'Symfony\\Bridge\\Twig\\Extension\\StopwatchExtension',
-            'twig.extension.expression.class' => 'Symfony\\Bridge\\Twig\\Extension\\ExpressionExtension',
-            'twig.form.engine.class' => 'Symfony\\Bridge\\Twig\\Form\\TwigRendererEngine',
-            'twig.form.renderer.class' => 'Symfony\\Bridge\\Twig\\Form\\TwigRenderer',
-            'twig.translation.extractor.class' => 'Symfony\\Bridge\\Twig\\Translation\\TwigExtractor',
-            'twig.exception_listener.class' => 'Symfony\\Component\\HttpKernel\\EventListener\\ExceptionListener',
-            'twig.controller.exception.class' => 'Symfony\\Bundle\\TwigBundle\\Controller\\ExceptionController',
-            'twig.controller.preview_error.class' => 'Symfony\\Bundle\\TwigBundle\\Controller\\PreviewErrorController',
             'twig.exception_listener.controller' => 'twig.controller.exception:showAction',
             'twig.form.resources' => array(
                 0 => 'form_div_layout.html.twig',

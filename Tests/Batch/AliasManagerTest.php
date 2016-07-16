@@ -11,7 +11,14 @@ class AliasManagerTest extends TestCase
 {
     public function testBuildAliasCSVRow()
     {
-        $aliasManager = new AliasManagerMock(new ConfigurationContainer(array('PSPID' => 'MyShop' )), new BatchRequest('test', $this->getContainer()->get('ogone.configuration'), $this->getContainer()->get('ogone.secure_configuration')));
+        $aliasManager = new AliasManagerMock(
+            new ConfigurationContainer(array('PSPID' => 'MyShop')),
+            new BatchRequest(
+                'test',
+                $this->getContainer()->get('ogone.configuration'),
+                $this->getContainer()->get('ogone.secure_configuration')
+            )
+        );
 
         $csv = $aliasManager->buildAliasCSVRow(
             AliasManagerMock::OPERATION_ADD,

@@ -37,7 +37,7 @@ class AliasManager extends BatchManager
         $this->addAlias($aliasName, $customerName, $cardNumber, $expirationDate, $brand);
     }
 
-    protected function buildAliasCSVRow($operation, $aliasName, $customerName, $cardNumber, $expirationDate, $brand)
+    public function buildAliasCSVRow($operation, $aliasName, $customerName, $cardNumber, $expirationDate, $brand)
     {
         return strtr('%operation%;%aliasName%;%customerName%;%cardNumber%;%expirationDate%;%brand%;%pspid%;', array(
             '%operation%'      => $operation,
